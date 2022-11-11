@@ -1,0 +1,23 @@
+:root {
+  font: 16px arial;
+}
+
+body {
+  margin: 1.0rem;
+}
+
+#input {
+  outline: none;
+  border-radius: 5px;
+  border: 1px solid black;
+  font-size: 1.5rem;
+  padding: 0.5rem;
+}
+
+.p {
+  font-size: 1.2rem;
+}
+
+#canvas {
+  border: 1px solid black;
+}
