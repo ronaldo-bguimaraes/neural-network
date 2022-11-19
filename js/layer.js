@@ -1,57 +1,29 @@
-import { Neuron } from "./neuron.js";
-class Layer {
-    Length;
-    constructor(length) {
-        this.Length = length;
+import { enumerate, PowerArray, Neuron } from './neuron.js';
+export class Layer {
+    _neurons;
+    _length;
+    _input_length;
+    constructor(length, input_length) {
+        this._length = length;
+        this._input_length = input_length;
+        this._neurons = PowerArray.generate(length, () => new Neuron(input_length));
     }
-}
-class InputLayer extends Layer {
-    Active(inputs) {
-        return inputs;
+    get length() {
+        return this._length;
     }
-}
-class HiddenLayer extends Layer {
-    InputLength;
-    Neurons;
-    constructor(length, inputLength) {
-        super(length);
-        this.InputLength = inputLength;
-        this.Neurons = [];
-        for (let i = 0; i < length; i++) {
-            this.Neurons[i] = new Neuron(inputLength);
+    get input_length() {
+        return this._input_length;
+    }
+    *active(input) {
+        for (const neuron of this._neurons) {
+            yield neuron.active(input);
         }
     }
-    Active(inputList) {
-        const outputs = [];
-        for (const key in this.Neurons) {
-            outputs[key] = this.Neurons[key].Active(inputList);
-        }
-        return outputs;
-    }
-    static Crossover(a, b) {
-        const child = new HiddenLayer(a.Length, a.InputLength);
-        for (let i = 0; i < a.Length; i++) {
-            child.Neurons[i] = Neuron.Crossover(a.Neurons[i], b.Neurons[i]);
+    static crossover(layers, mutation) {
+        const child = new Layer(layers[0]._length, layers[0].input_length);
+        for (const [idx] of enumerate(child._neurons)) {
+            child._neurons[idx] = Neuron.crossover(layers.map(layer => layer._neurons[idx]), mutation);
         }
         return child;
     }
 }
-class OutputLayer extends HiddenLayer {
-    Active(inputList) {
-        const outputs = [];
-        for (const key in this.Neurons) {
-            outputs[key] = this.Neurons[key].Active(inputList);
-        }
-        return outputs;
-    }
-}
-function CreateInputLayer(length) {
-    return new InputLayer(length);
-}
-function CreateHiddenLayer(length, inputLength) {
-    return new HiddenLayer(length, inputLength);
-}
-function CreateOutputLayer(length, inputLength) {
-    return new OutputLayer(length, inputLength);
-}
-export { InputLayer, HiddenLayer, OutputLayer, CreateInputLayer, CreateHiddenLayer, CreateOutputLayer, };

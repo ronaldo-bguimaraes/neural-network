@@ -1,75 +1,35 @@
-import { Neuron } from "./neuron.js";
+import { enumerate, PowerArray, Neuron } from './neuron.js';
 
-class Layer {
-  protected Length: number;
-  constructor(length: number) {
-    this.Length = length;
+export class Layer {
+  private _neurons: PowerArray<Neuron>;
+  private _length: number;
+  private _input_length: number;
+
+  constructor(length: number, input_length: number) {
+    this._length = length;
+    this._input_length = input_length;
+    this._neurons = PowerArray.generate(length, () => new Neuron(input_length));
   }
-}
 
-class InputLayer extends Layer {
-  public Active(inputs: number[]): number[] {
-    return inputs;
+  get length() {
+    return this._length;
   }
-}
 
-class HiddenLayer extends Layer {
-  protected InputLength: number;
-  protected Neurons: Neuron[];
+  get input_length() {
+    return this._input_length;
+  }
 
-  constructor(length: number, inputLength: number) {
-    super(length);
-    this.InputLength = inputLength;
-    this.Neurons = [];
-    for (let i = 0; i < length; i++) {
-      this.Neurons[i] = new Neuron(inputLength);
+  *active(input: Iterable<number>) {
+    for (const neuron of this._neurons) {
+      yield neuron.active(input);
     }
   }
 
-  public Active(inputList: number[]) {
-    const outputs: number[] = [];
-    for (const key in this.Neurons) {
-      outputs[key] = this.Neurons[key].Active(inputList);
-    }
-    return outputs;
-  }
-
-  public static Crossover(a: HiddenLayer, b: HiddenLayer) {
-    const child = new HiddenLayer(a.Length, a.InputLength);
-    for (let i = 0; i < a.Length; i++) {
-      child.Neurons[i] = Neuron.Crossover(a.Neurons[i], b.Neurons[i]);
+  static crossover(layers: Layer[], mutation: number) {
+    const child = new Layer(layers[0]._length, layers[0].input_length);
+    for (const [idx] of enumerate(child._neurons)) {
+      child._neurons[idx] = Neuron.crossover(layers.map(layer => layer._neurons[idx]), mutation);
     }
     return child;
   }
 }
-
-class OutputLayer extends HiddenLayer {
-  public Active(inputList: number[]): number[] {
-    const outputs: number[] = [];
-    for (const key in this.Neurons) {
-      outputs[key] = this.Neurons[key].Active(inputList);
-    }
-    return outputs;
-  }
-}
-
-function CreateInputLayer(length: number): InputLayer {
-  return new InputLayer(length);
-}
-
-function CreateHiddenLayer(length: number, inputLength: number): HiddenLayer {
-  return new HiddenLayer(length, inputLength);
-}
-
-function CreateOutputLayer(length: number, inputLength: number): OutputLayer {
-  return new OutputLayer(length, inputLength);
-}
-
-export {
-  InputLayer,
-  HiddenLayer,
-  OutputLayer,
-  CreateInputLayer,
-  CreateHiddenLayer,
-  CreateOutputLayer,
-};
